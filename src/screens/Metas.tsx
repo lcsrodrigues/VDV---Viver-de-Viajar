@@ -56,7 +56,7 @@ export const Metas: React.FC = () => {
         quantidadeNecessaria: 0,
         quantidadeAtual: 0
       });
-      setMetas(metas => [...metas, newMeta]);
+      setMetas(prevMetas => [...prevMetas, newMeta]);
       setEditingId(newMeta.id);
       setEditValues(newMeta);
     } catch (error) {
