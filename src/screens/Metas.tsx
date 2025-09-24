@@ -35,7 +35,9 @@ export const Metas: React.FC = () => {
     try {
       const updatedMeta = await metasService.update(id, editValues);
       if (updatedMeta) {
-        setMetas(metas => metas.map(m => m.id === id ? updatedMeta : m));
+        // Recarregar dados do serviço para garantir sincronização
+        const updatedMetas = await metasService.list();
+        setMetas(updatedMetas);
       }
       setEditingId(null);
       setEditValues({});
@@ -56,7 +58,9 @@ export const Metas: React.FC = () => {
         quantidadeNecessaria: 0,
         quantidadeAtual: 0
       });
-      setMetas(metas => [...metas, newMeta]);
+      // Recarregar dados do serviço para garantir sincronização
+      const updatedMetas = await metasService.list();
+      setMetas(updatedMetas);
       setEditingId(newMeta.id);
       setEditValues(newMeta);
     } catch (error) {
@@ -68,7 +72,9 @@ export const Metas: React.FC = () => {
     if (window.confirm('Tem certeza que deseja excluir esta meta?')) {
       try {
         await metasService.delete(id);
-        setMetas(metas => metas.filter(m => m.id !== id));
+        // Recarregar dados do serviço para garantir sincronização
+        const updatedMetas = await metasService.list();
+        setMetas(updatedMetas);
       } catch (error) {
         console.error('Error deleting goal:', error);
       }

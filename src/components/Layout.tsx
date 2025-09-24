@@ -9,19 +9,28 @@ interface LayoutProps {
   onMenuItemClick: (item: string) => void;
   selectedPeriod?: string;
   onPeriodChange?: (period: string) => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (isCollapsed: boolean) => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  title, 
-  activeMenuItem, 
+export const Layout: React.FC<LayoutProps> = ({
+  children,
+  title,
+  activeMenuItem,
   onMenuItemClick,
   selectedPeriod,
-  onPeriodChange
+  onPeriodChange,
+  isSidebarCollapsed,
+  setIsSidebarCollapsed
 }) => {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar activeItem={activeMenuItem} onItemClick={onMenuItemClick} />
+      <Sidebar
+        activeItem={activeMenuItem}
+        onItemClick={onMenuItemClick}
+        isCollapsed={isSidebarCollapsed}
+        toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar 
@@ -37,4 +46,5 @@ export const Layout: React.FC<LayoutProps> = ({
     </div>
   );
 };
+
 

@@ -1,18 +1,15 @@
-export type Cotacao = {
+export interface Cotacao {
   id: string;
-  descricao: string;
-  data: string; // ISO string for Date
-  tipoCotacao: 'Emissão' | 'Simulação' | 'Reemissão';
-  valorDasMilhas: number;
-  valorPagante: number;
-  economia: number;
-  passagemEmitida: boolean;
-  taxaPorTipo: number;
-  mes: string; // e.g., "2025-09"
-  quantidadeCotacao: number;
-  respNao: number; // campo legado
-  taxaExtra: number;
-  taxaServico: number;
-  valorAgregado: number;
-};
+  clientId: string; // Relates to Client.id
+  contractId: string; // Relates to Contract.id
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  adults: number;
+  children: number;
+  status: 'pending' | 'quoted' | 'booked' | 'cancelled';
+  estimatedValue?: number;
+  milesUsed?: number;
+  notes?: string;
+}
 

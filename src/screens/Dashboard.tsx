@@ -26,7 +26,11 @@ import { Movimentacao } from '../types/Movimentacao';
 import { Program } from '../types/Program';
 import { Loja } from '../types/Loja';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onMenuItemClick: (item: string) => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ onMenuItemClick }) => {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [programas, setProgramas] = useState<Program[]>([]);
   const [lojas, setLojas] = useState<Loja[]>([]);
@@ -195,7 +199,10 @@ export const Dashboard: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
             Últimas Movimentações
           </h3>
-          <button className="flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium">
+          <button 
+            className="flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+            onClick={() => onMenuItemClick("movimentacoes")}
+          >
             Ver todas
             <ArrowRight className="h-4 w-4 ml-1" />
           </button>
