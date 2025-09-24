@@ -90,11 +90,13 @@ export const MovimentacoesCRUD: React.FC = () => {
   };
 
   const getClientName = (clientId: string) => {
+    if (!clientId || !clients.length) return 'N/A';
     const client = clients.find(c => c.id === clientId);
     return client ? client.name : 'N/A';
   };
 
   const getContractNumber = (contractId: string) => {
+    if (!contractId || !contracts.length) return 'N/A';
     const contract = contracts.find(c => c.id === contractId);
     return contract ? contract.contractNumber : 'N/A';
   };
@@ -224,7 +226,7 @@ export const MovimentacoesCRUD: React.FC = () => {
                         </select>
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.type.charAt(0).toUpperCase() + mov.type.slice(1)}
+                          {mov.type ? mov.type.charAt(0).toUpperCase() + mov.type.slice(1) : 'N/A'}
                         </div>
                       )}
                     </td>
@@ -254,7 +256,7 @@ export const MovimentacoesCRUD: React.FC = () => {
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.quantity.toLocaleString('pt-BR')}
+                          {(mov.quantity || 0).toLocaleString('pt-BR')}
                         </div>
                       )}
                     </td>
@@ -269,7 +271,7 @@ export const MovimentacoesCRUD: React.FC = () => {
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          {(mov.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </div>
                       )}
                     </td>
@@ -284,7 +286,7 @@ export const MovimentacoesCRUD: React.FC = () => {
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.date}
+                          {mov.date || 'N/A'}
                         </div>
                       )}
                     </td>
@@ -299,7 +301,7 @@ export const MovimentacoesCRUD: React.FC = () => {
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.description}
+                          {mov.description || 'N/A'}
                         </div>
                       )}
                     </td>
