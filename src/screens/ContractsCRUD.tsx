@@ -1,30 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, ArrowUpDown, DollarSign, Calendar } from 'lucide-react';
+import { Plus, FileText, DollarSign, Calendar, User } from 'lucide-react';
 import { Button } from '../components/Button';
-import { movimentacaoService } from '../services/MovimentacaoService';
-import { Movimentacao } from '../types/Movimentacao';
-import { clientService } from '../services/ClientService';
-import { Client } from '../types/Client';
 import { contractService } from '../services/ContractService';
 import { Contract } from '../types/Contract';
+import { clientService } from '../services/ClientService';
+import { Client } from '../types/Client';
 
-export const MovimentacoesCRUD: React.FC = () => {
-  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+export const ContractsCRUD: React.FC = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<Movimentacao>>({});
+  const [editValues, setEditValues] = useState<Partial<Contract>>({});
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const movData = await movimentacaoService.list();
-        const clientData = await clientService.list();
         const contractData = await contractService.list();
-        setMovimentacoes(movData);
-        setClients(clientData);
+        const clientData = await clientService.list();
         setContracts(contractData);
+        setClients(clientData);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -35,21 +30,21 @@ export const MovimentacoesCRUD: React.FC = () => {
     loadData();
   }, []);
 
-  const handleEdit = (mov: Movimentacao) => {
-    setEditingId(mov.id);
-    setEditValues(mov);
+  const handleEdit = (contract: Contract) => {
+    setEditingId(contract.id);
+    setEditValues(contract);
   };
 
   const handleSave = async (id: string) => {
     try {
-      const updatedMov = await movimentacaoService.update(id, editValues);
-      if (updatedMov) {
-        setMovimentacoes(movs => movs.map(m => m.id === id ? updatedMov : m));
+      const updatedContract = await contractService.update(id, editValues);
+      if (updatedContract) {
+        setContracts(contracts => contracts.map(c => c.id === id ? updatedContract : c));
       }
       setEditingId(null);
       setEditValues({});
     } catch (error) {
-      console.error('Error updating movimentacao:', error);
+      console.error('Error updating contract:', error);
     }
   };
 
@@ -60,31 +55,34 @@ export const MovimentacoesCRUD: React.FC = () => {
 
   const handleAddNew = async () => {
     try {
-      const newMov = await movimentacaoService.create({
-        clientId: clients[0]?.id || '', // Default to first client if available
-        contractId: contracts[0]?.id || '', // Default to first contract if available
-        type: 'compra',
-        program: 'Novo Programa',
-        quantity: 0,
-        value: 0,
-        date: new Date().toISOString().split('T')[0],
-        description: 'Nova movimentação',
+      const newContract = await contractService.create({
+        contractNumber: `VDV-${new Date().getFullYear()}-${String(contracts.length + 1).padStart(3, '0')}`,
+        clientId: clients[0]?.id || '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'active',
+        serviceType: 'gestao_milhas',
+        monthlyFee: 299.90,
+        commissionRate: 5.0,
+        notes: 'Novo contrato',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
-      setMovimentacoes(prevMovs => [...prevMovs, newMov]);
-      setEditingId(newMov.id);
-      setEditValues(newMov);
+      setContracts(prevContracts => [...prevContracts, newContract]);
+      setEditingId(newContract.id);
+      setEditValues(newContract);
     } catch (error) {
-      console.error('Error creating movimentacao:', error);
+      console.error('Error creating contract:', error);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta movimentação?')) {
+    if (window.confirm('Tem certeza que deseja excluir este contrato?')) {
       try {
-        await movimentacaoService.delete(id);
-        setMovimentacoes(movs => movs.filter(m => m.id !== id));
+        await contractService.delete(id);
+        setContracts(contracts => contracts.filter(c => c.id !== id));
       } catch (error) {
-        console.error('Error deleting movimentacao:', error);
+        console.error('Error deleting contract:', error);
       }
     }
   };
@@ -94,9 +92,30 @@ export const MovimentacoesCRUD: React.FC = () => {
     return client ? client.name : 'N/A';
   };
 
-  const getContractNumber = (contractId: string) => {
-    const contract = contracts.find(c => c.id === contractId);
-    return contract ? contract.contractNumber : 'N/A';
+  const getStatusBadge = (status: Contract['status']) => {
+    const statusConfig = {
+      active: { color: 'bg-green-100 text-green-800', label: 'Ativo' },
+      inactive: { color: 'bg-gray-100 text-gray-800', label: 'Inativo' },
+      suspended: { color: 'bg-yellow-100 text-yellow-800', label: 'Suspenso' },
+      expired: { color: 'bg-red-100 text-red-800', label: 'Expirado' },
+    };
+
+    const config = statusConfig[status];
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const getServiceTypeLabel = (serviceType: Contract['serviceType']) => {
+    const labels = {
+      gestao_milhas: 'Gestão de Milhas',
+      consultoria: 'Consultoria',
+      premium: 'Premium',
+      basico: 'Básico',
+    };
+    return labels[serviceType];
   };
 
   if (loading) {
@@ -113,22 +132,86 @@ export const MovimentacoesCRUD: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-            Movimentações
+            Contratos
           </h2>
           <p className="text-gray-600 mt-1">
-            Gerencie todas as movimentações de milhas e pontos.
+            Gerencie todos os contratos de clientes e serviços.
           </p>
         </div>
         <Button icon={Plus} onClick={handleAddNew}>
-          Nova Movimentação
+          Novo Contrato
         </Button>
       </div>
 
-      {/* Movimentacoes Table */}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <FileText className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total de Contratos</p>
+              <p className="text-2xl font-bold text-gray-900">{contracts.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <User className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Contratos Ativos</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {contracts.filter(c => c.status === 'active').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <DollarSign className="h-8 w-8 text-yellow-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Receita Mensal</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {contracts
+                  .filter(c => c.status === 'active')
+                  .reduce((sum, c) => sum + c.monthlyFee, 0)
+                  .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Calendar className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Vencendo em 30 dias</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {contracts.filter(c => {
+                  const endDate = new Date(c.endDate);
+                  const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                  return endDate <= thirtyDaysFromNow && endDate >= new Date();
+                }).length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contracts Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-            Lista de Movimentações
+            Lista de Contratos
           </h3>
         </div>
         
@@ -137,28 +220,28 @@ export const MovimentacoesCRUD: React.FC = () => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Número do Contrato
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Cliente
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contrato
+                  Tipo de Serviço
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Programa
+                  Valor Mensal
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantidade
+                  Comissão (%)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Valor (R$)
+                  Início
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Descrição
+                  Fim
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ações
@@ -166,11 +249,26 @@ export const MovimentacoesCRUD: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {movimentacoes.map((mov, index) => {
-                const isEditing = editingId === mov.id;
+              {contracts.map((contract, index) => {
+                const isEditing = editingId === contract.id;
 
                 return (
-                  <tr key={mov.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={contract.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editValues.contractNumber || ''}
+                          onChange={(e) => setEditValues({ ...editValues, contractNumber: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
+                        />
+                      ) : (
+                        <div className="text-sm font-medium text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+                          {contract.contractNumber}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isEditing ? (
                         <select
@@ -185,61 +283,59 @@ export const MovimentacoesCRUD: React.FC = () => {
                         </select>
                       ) : (
                         <div className="text-sm font-medium text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {getClientName(mov.clientId)}
+                          {getClientName(contract.clientId)}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isEditing ? (
                         <select
-                          value={editValues.contractId || ''}
-                          onChange={(e) => setEditValues({ ...editValues, contractId: e.target.value })}
+                          value={editValues.serviceType || 'gestao_milhas'}
+                          onChange={(e) => setEditValues({ ...editValues, serviceType: e.target.value as Contract['serviceType'] })}
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         >
-                          {contracts.map(contract => (
-                            <option key={contract.id} value={contract.id}>{contract.contractNumber}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="text-sm font-medium text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {getContractNumber(mov.contractId)}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEditing ? (
-                        <select
-                          value={editValues.type || 'compra'}
-                          onChange={(e) => setEditValues({ ...editValues, type: e.target.value as Movimentacao['type'] })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
-                        >
-                          <option value="compra">Compra</option>
-                          <option value="venda">Venda</option>
-                          <option value="transferencia">Transferência</option>
-                          <option value="bonus">Bônus</option>
-                          <option value="ajuste">Ajuste</option>
-                          <option value="troca">Troca</option>
+                          <option value="gestao_milhas">Gestão de Milhas</option>
+                          <option value="consultoria">Consultoria</option>
+                          <option value="premium">Premium</option>
+                          <option value="basico">Básico</option>
                         </select>
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.type.charAt(0).toUpperCase() + mov.type.slice(1)}
+                          {getServiceTypeLabel(contract.serviceType)}
                         </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {isEditing ? (
+                        <select
+                          value={editValues.status || 'active'}
+                          onChange={(e) => setEditValues({ ...editValues, status: e.target.value as Contract['status'] })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
+                        >
+                          <option value="active">Ativo</option>
+                          <option value="inactive">Inativo</option>
+                          <option value="suspended">Suspenso</option>
+                          <option value="expired">Expirado</option>
+                        </select>
+                      ) : (
+                        getStatusBadge(contract.status)
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isEditing ? (
                         <input
-                          type="text"
-                          value={editValues.program || ''}
-                          onChange={(e) => setEditValues({ ...editValues, program: e.target.value })}
+                          type="number"
+                          step="0.01"
+                          value={editValues.monthlyFee || 0}
+                          onChange={(e) => setEditValues({ ...editValues, monthlyFee: Number(e.target.value) })}
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.program}
+                          {contract.monthlyFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </div>
                       )}
                     </td>
@@ -247,29 +343,15 @@ export const MovimentacoesCRUD: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="number"
-                          value={editValues.quantity || 0}
-                          onChange={(e) => setEditValues({ ...editValues, quantity: Number(e.target.value) })}
+                          step="0.1"
+                          value={editValues.commissionRate || 0}
+                          onChange={(e) => setEditValues({ ...editValues, commissionRate: Number(e.target.value) })}
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.quantity.toLocaleString('pt-BR')}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={editValues.value || 0}
-                          onChange={(e) => setEditValues({ ...editValues, value: Number(e.target.value) })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          style={{ fontFamily: 'Segoe UI, sans-serif' }}
-                        />
-                      ) : (
-                        <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          {contract.commissionRate}%
                         </div>
                       )}
                     </td>
@@ -277,36 +359,36 @@ export const MovimentacoesCRUD: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="date"
-                          value={editValues.date || ''}
-                          onChange={(e) => setEditValues({ ...editValues, date: e.target.value })}
+                          value={editValues.startDate || ''}
+                          onChange={(e) => setEditValues({ ...editValues, startDate: e.target.value })}
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.date}
+                          {contract.startDate}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isEditing ? (
                         <input
-                          type="text"
-                          value={editValues.description || ''}
-                          onChange={(e) => setEditValues({ ...editValues, description: e.target.value })}
+                          type="date"
+                          value={editValues.endDate || ''}
+                          onChange={(e) => setEditValues({ ...editValues, endDate: e.target.value })}
                           className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           style={{ fontFamily: 'Segoe UI, sans-serif' }}
                         />
                       ) : (
                         <div className="text-sm text-gray-900" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-                          {mov.description}
+                          {contract.endDate}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {isEditing ? (
                         <div className="flex items-center justify-end space-x-2">
-                          <Button size="sm" onClick={() => handleSave(mov.id)}>
+                          <Button size="sm" onClick={() => handleSave(contract.id)}>
                             Salvar
                           </Button>
                           <Button size="sm" variant="outline" onClick={handleCancel}>
@@ -316,13 +398,13 @@ export const MovimentacoesCRUD: React.FC = () => {
                       ) : (
                         <div className="flex items-center justify-end space-x-2">
                           <button
-                            onClick={() => handleEdit(mov)}
+                            onClick={() => handleEdit(contract)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             Editar
                           </button>
                           <button
-                            onClick={() => handleDelete(mov.id)}
+                            onClick={() => handleDelete(contract.id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             Excluir
@@ -340,4 +422,3 @@ export const MovimentacoesCRUD: React.FC = () => {
     </div>
   );
 };
-

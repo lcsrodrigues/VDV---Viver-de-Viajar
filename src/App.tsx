@@ -6,6 +6,7 @@ import { CotacoesCRUD } from './screens/CotacoesCRUD';
 import { Metas } from './screens/Metas';
 import { Cadastros } from './screens/Cadastros';
 import { Clients } from './screens/Clients';
+import { ContractsCRUD } from './screens/ContractsCRUD';
 import { Relatorios } from './screens/Relatorios';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
@@ -48,6 +49,8 @@ function App() {
         return <Cadastros />;
       case 'clients':
         return <Clients />;
+      case 'contracts':
+        return <ContractsCRUD />;
       case 'relatorios':
         return <Relatorios />;
       default:

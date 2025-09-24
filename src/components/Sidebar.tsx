@@ -30,7 +30,8 @@ const menuItems: MenuItem[] = [
   { id: 'cotacoes', label: 'Cotações', icon: Calculator },
   { id: 'metas', label: 'Metas', icon: Target },
   { id: 'cadastros', label: 'Cadastros', icon: Settings, subItems: [
-    { id: 'clients', label: 'Clientes/Contratos', icon: User },
+    { id: 'clients', label: 'Clientes', icon: User },
+    { id: 'contracts', label: 'Contratos', icon: FileText },
   ] },
   { id: 'relatorios', label: 'Relatórios', icon: FileText },
 ];
@@ -44,11 +45,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCol
       >
         {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
       </button>
-      <div className={`p-6 ${isCollapsed ? 'hidden' : ''}`}>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-          VDV - Viver de Viajar
-        </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Sistema de Gestão de Milhas</p>
+      <div className={`p-6 ${isCollapsed ? 'px-3 py-4' : ''}`}>
+        {isCollapsed ? (
+          <div className="flex justify-center">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">VDV</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+              VDV - Viver de Viajar
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Sistema de Gestão de Milhas</p>
+          </>
+        )}
       </div>
 
       <nav className="mt-6">
@@ -56,14 +67,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCol
           <div key={item.id}>
             <button
               onClick={() => onItemClick(item.id)}
-              className={`w-full flex items-center px-6 py-3 text-left transition-colors ${activeItem === item.id
+              className={`w-full flex items-center ${isCollapsed ? 'px-3 justify-center' : 'px-6'} py-3 text-left transition-colors relative group ${activeItem === item.id
                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-2 border-blue-700 dark:border-blue-300'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
               style={{ fontFamily: 'Segoe UI, sans-serif' }}
+              title={isCollapsed ? item.label : undefined}
             >
               <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} ${activeItem === item.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`} />
               {!isCollapsed && item.label}
+              
+              {/* Tooltip para menu colapsado */}
+              {isCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {item.label}
+                </div>
+              )}
             </button>
             {item.subItems && !isCollapsed && (
               <div className="ml-8">
@@ -71,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCol
                   <button
                     key={subItem.id}
                     onClick={() => onItemClick(subItem.id)}
-                    className={`w-full flex items-center px-6 py-2 text-left text-sm transition-colors ${activeItem === subItem.id
+                    className={`w-full flex items-center px-6 py-2 text-left text-sm transition-colors relative group ${activeItem === subItem.id
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-2 border-blue-700 dark:border-blue-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                       }`}
@@ -83,6 +102,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCol
                 ))}
               </div>
             )}
+            
+
           </div>
         ))}
       </nav>

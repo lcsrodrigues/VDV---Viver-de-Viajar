@@ -5,6 +5,7 @@ const initialMovimentacoes: Movimentacao[] = [
   {
     id: '1',
     clientId: '1',
+    contractId: '1',
     type: 'compra',
     program: 'Smiles',
     quantity: 10000,
@@ -15,6 +16,7 @@ const initialMovimentacoes: Movimentacao[] = [
   {
     id: '2',
     clientId: '2',
+    contractId: '2',
     type: 'venda',
     program: 'Livelo',
     quantity: 5000,
@@ -25,6 +27,7 @@ const initialMovimentacoes: Movimentacao[] = [
   {
     id: '3',
     clientId: '1',
+    contractId: '1',
     type: 'bonus',
     program: 'Latam Pass',
     quantity: 20000,
